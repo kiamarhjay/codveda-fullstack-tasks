@@ -2,11 +2,16 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const workoutRoutes = require('./routes/workoutRoutes');
+const cors = require('cors');
+
 
 
 
 const app = express();
+app.use(cors());
+app.use(express.static('public'));
 app.use(express.json());
+
 //app.get('/', (req,res) => {res.send('Server is up and running smoothly...yay! 😍 \n Welcome to my web page 🥺 \n So glad to have you here 😎');});
 //CREATE: post
 app.use('/api/workouts', workoutRoutes);
