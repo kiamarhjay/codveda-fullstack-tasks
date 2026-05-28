@@ -14,13 +14,27 @@ async function fetchWorkouts() {
         workoutsContainer.innerHTML = '';
         data.forEach(workout => {
             const workoutCard = document.createElement('div');
-            workoutCard.className = 'Workout-card';
+            workoutCard.className = 'workout-card';
             workoutCard.innerHTML = `
+                <div class="card-conent">
                 <h3>${workout.title}</h3>
                 <p><strong>Duration: </strong>${workout.duration} mins</p>
                 <p><strong>Reps: </strong>${workout.reps} </p>
                 <small> Added: ${new Date(workout.createdAt).toLocaleDateString()}</small>
+                </div>
             `;
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerText = '🗑️';
+
+            const workoutID = workout._id || workout.id;
+
+            deleteBtn.onclick = async (e) => {
+                e.stopPropagation();
+                console.log("Trashcan clicked for ID: ", workoutID);
+                await deleteWorkoutFromDB(workoutID);
+            };
+            workoutCard.appendChild(deleteBtn)
             workoutsContainer.appendChild(workoutCard);
         });
     } catch (error) {
@@ -28,6 +42,7 @@ async function fetchWorkouts() {
         console.error('Error:', error);
     }
 }
+
 
 workoutForm.addEventListener('submit', async (e) =>{
     e.preventDefault();
@@ -54,5 +69,23 @@ workoutForm.addEventListener('submit', async (e) =>{
     }
 });
 
+async function deleteWorkoutFromDB(id) {
+    if (!id) {
+        alert("Error: Missing Workout ID.");
+        return;
+    }
+    if (!confirm('Are you sure you want to delete this workout?!')) return;
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE'});
+        if (response.ok) {
+            fetchWorkouts();
+        } else {
+            alert(`Failed to delete the workout. Server status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Error deleting workout: ', error);
+    }
+}
 //To run when page loads
-fetchWorkouts();
+fetchWorkouts(); 
