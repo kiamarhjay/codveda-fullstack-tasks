@@ -24,18 +24,16 @@ const createWorkout = async(req,res) => {
 };
 //To update workout - PUT/api/workouts/:id
 const updateWorkout = async (req,res) => {
+    const {id} = req.params;
     try{
         const updatedWorkout = await Workout.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new:true }
+            id,
+            {...req.body},
+            { new:true, runValidators: true }
         );
-        if (!updatedWorkout) {
-            res.status(400).json({error: error.message});
-        }
-        res.status(200).json(updatedWorkout)
+        return res.status(200).json(updatedWorkout)
     } catch(error) {
-        res.status(400).json({error: error.message});
+        return res.status(400).json({error: error.message});
     }
 };
 //To delete workout - DELETE/api/workout/:id

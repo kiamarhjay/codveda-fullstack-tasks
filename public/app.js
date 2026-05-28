@@ -1,4 +1,5 @@
 const API_URL = 'http://localhost:5000/api/workouts';
+let currentEditingID = null;
 const workoutsContainer = document.getElementById('workouts-container');
 const workoutForm = document.getElementById('workout-form');
 
@@ -23,6 +24,16 @@ async function fetchWorkouts() {
                 <small> Added: ${new Date(workout.createdAt).toLocaleDateString()}</small>
                 </div>
             `;
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.innerText = '✏️';
+
+            editBtn.onclick = async (e) => {
+                e.stopPropagation();
+                prepareEditForm(workout);
+            }
+
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
             deleteBtn.innerText = '🗑️';
@@ -35,6 +46,7 @@ async function fetchWorkouts() {
                 await deleteWorkoutFromDB(workoutID);
             };
             workoutCard.appendChild(deleteBtn)
+            workoutCard.append(editBtn);
             workoutsContainer.appendChild(workoutCard);
         });
     } catch (error) {
@@ -50,24 +62,43 @@ workoutForm.addEventListener('submit', async (e) =>{
     const title = document.getElementById('title').value;
     const duration = document.getElementById('duration').value;
     const reps = document.getElementById('reps').value;
+    const isEditing = currentEditingID !== null;
+    const url = isEditing ? `${API_URL}/${currentEditingID}` : API_URL;
+    const method = isEditing ? 'PUT' : 'POST';
 
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
+        const response = await fetch(url, {
+            method: method,
             headers: {'Content-Type': 'application/json' },
             body: JSON.stringify({title,duration,reps})
         });
 
         if(response.ok) {
             workoutForm.reset();
+            currentEditingID = null;
+            const submitBtn = workoutForm.querySelector('button[type = "submit"]');
+            submitBtn.innerText = 'Add Workout';
+            submitBtn.style.background = '#2ecc71';
+
             fetchWorkouts();
         } else {
-            alert('Failed to save workout');
+            alert('Failed to save data');
         }
     } catch (error) {
-        console.error('Error creating workout: ', error);
+        console.error('Error during form submission: ', error);
     }
 });
+
+function prepareEditForm(workout) {
+    currentEditingID = workout._id || workout.id;
+    document.getElementById('title').value = workout.title;
+    document.getElementById('duration').value = workout.duration;
+    document.getElementById('reps').value = workout.reps;
+
+    const submitbtn = workoutForm.querySelector('button[type = "submit"]');
+    submitbtn.innerText = 'Update Workout';
+    submitbtn.style.background = '#3498db';
+}
 
 async function deleteWorkoutFromDB(id) {
     if (!id) {
